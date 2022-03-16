@@ -61,9 +61,15 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
     public String welcomeUser(Chat chat) {
         log.info(chat.id() + " user logged.");
         final Optional<DevUser> optionalDevUser = devUserRepository.findByChatId(chat.id());
-        /*
-        if (optionalDevUser.isPresent())
+        if (optionalDevUser.isPresent()) {
+            if (optionalDevUser.get().getIsDevUser() == null) {
+                final DevUser devUser = optionalDevUser.get();
+                devUser.setIsDevUser(false);
+                devUserRepository.save(devUser);
+                return loginMessage();
+            }
             return "Bentornato su sviluppatore!";
+        }
         final DevUser devUser = devUserRepository.findByChatId(chat.id())
                 .orElse(DevUser.builder()
                         .chatId(chat.id())
@@ -71,19 +77,6 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
                         .isDevUser(false)
                         .build());
         devUserRepository.save(devUser);
-         */
-        if (optionalDevUser.isPresent()) {
-            final DevUser devUser = optionalDevUser.get();
-            devUser.setDevUser(false);
-            devUserRepository.save(devUser);
-        } else {
-            final DevUser devUser = DevUser.builder()
-                    .chatId(chat.id())
-                    .username(chat.username())
-                    .isDevUser(false)
-                    .build();
-            devUserRepository.save(devUser);
-        }
         return loginMessage();
     }
 
@@ -99,7 +92,7 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
         if (optionalDevUser.isEmpty())
             return "Utente non registrato reinizializza il bot con /start";
         final DevUser devUser = optionalDevUser.get();
-        if (!devUser.isDevUser())
+        if (!devUser.getIsDevUser())
             return loginMessage();
         List<KairosUser> kairosUsers = userRepository.findAll();
         String out = "";
@@ -124,7 +117,7 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
         if (optionalDevUser.isEmpty())
             return "Utente non registrato, reinizializza il bot con /start";
         final DevUser devUser = optionalDevUser.get();
-        if (!devUser.isDevUser())
+        if (!devUser.getIsDevUser())
             return loginMessage();
         final Optional<KairosUser> optionalKairosUser = userRepository.findByChadId(chatId);
         if (optionalKairosUser.isEmpty())
@@ -145,7 +138,7 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
         if (optionalDevUser.isEmpty())
             return "Utente non registrato, reinizializza il bot con /start";
         final DevUser devUser = optionalDevUser.get();
-        if (!devUser.isDevUser())
+        if (!devUser.getIsDevUser())
             return loginMessage();
         userRepository.findAll().forEach(u -> bot.execute(new SendMessage(u.getChadId(), message)));
         return "Messaggi inviati con successo";
@@ -164,7 +157,7 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
         if (optionalDevUser.isEmpty())
             return "Utente non registrato, reinizializza il bot con /start";
         final DevUser devUser = optionalDevUser.get();
-        if (!devUser.isDevUser())
+        if (!devUser.getIsDevUser())
             return loginMessage();
         bot.execute(new SendMessage(chatId, message));
         return "Messaggio inviato con successo";
@@ -176,8 +169,8 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
         if (optionalDevUser.isEmpty())
             return "Utente non registrato, reinizializza il bot con /start";
         final DevUser devUser = optionalDevUser.get();
-        if (message.equals(PASSWORD) && !devUser.isDevUser()) {
-            devUser.setDevUser(true);
+        if (message.equals(PASSWORD) && !devUser.getIsDevUser()) {
+            devUser.setIsDevUser(true);
             devUserRepository.save(devUser);
             return "Autenticazione avvenuta con successo.\n" +
                     "Benvenuto sviluppatore!";

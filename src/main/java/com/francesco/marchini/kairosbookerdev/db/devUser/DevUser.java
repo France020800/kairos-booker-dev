@@ -29,5 +29,5 @@ public class DevUser {
     private String username;
 
     @Column(name = "is_dev_user")
-    private boolean isDevUser;
+    private Boolean isDevUser;
 }
