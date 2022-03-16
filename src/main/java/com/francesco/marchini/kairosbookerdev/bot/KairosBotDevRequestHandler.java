@@ -60,10 +60,10 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
     @MessageRequest("/start")
     public String welcomeUser(Chat chat) {
         log.info(chat.id() + " user logged.");
-        final Optional<DevUser> optionalDevUser = devUserRepository.findByChadId(chat.id());
+        final Optional<DevUser> optionalDevUser = devUserRepository.findByChatId(chat.id());
         if (optionalDevUser.isPresent())
             return "Bentornato su sviluppatore!";
-        final DevUser devUser = devUserRepository.findByChadId(chat.id())
+        final DevUser devUser = devUserRepository.findByChatId(chat.id())
                 .orElse(DevUser.builder()
                         .chatId(chat.id())
                         .username(chat.username())
@@ -81,7 +81,7 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
     @MessageRequest("/user")
     public String getUser(Chat chat) {
         log.info("/user command");
-        Optional<DevUser> optionalDevUser = devUserRepository.findByChadId(chat.id());
+        Optional<DevUser> optionalDevUser = devUserRepository.findByChatId(chat.id());
         if (optionalDevUser.isEmpty())
             return "Utente non registrato reinizializza il bot con /start";
         final DevUser devUser = optionalDevUser.get();
@@ -106,7 +106,7 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
     @MessageRequest("/delete_user {chatId}")
     public String removeUser(Chat chat, @BotPathVariable("chatId") Long chatId) {
         log.info("/delete_user command");
-        Optional<DevUser> optionalDevUser = devUserRepository.findByChadId(chat.id());
+        Optional<DevUser> optionalDevUser = devUserRepository.findByChatId(chat.id());
         if (optionalDevUser.isEmpty())
             return "Utente non registrato, reinizializza il bot con /start";
         final DevUser devUser = optionalDevUser.get();
@@ -127,7 +127,7 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
     @MessageRequest("/send_to_all {message}")
     public String sendToAll(Chat chat, @BotPathVariable("message") String message) {
         log.info("/send_to_all command");
-        Optional<DevUser> optionalDevUser = devUserRepository.findByChadId(chat.id());
+        Optional<DevUser> optionalDevUser = devUserRepository.findByChatId(chat.id());
         if (optionalDevUser.isEmpty())
             return "Utente non registrato, reinizializza il bot con /start";
         final DevUser devUser = optionalDevUser.get();
@@ -146,7 +146,7 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
     @MessageRequest("/send_to {chatId} {message}")
     public String sendTo(Chat chat, @BotPathVariable("chatId") Long chatId, @BotPathVariable("message") String message) {
         log.info("/send_to command");
-        Optional<DevUser> optionalDevUser = devUserRepository.findByChadId(chat.id());
+        Optional<DevUser> optionalDevUser = devUserRepository.findByChatId(chat.id());
         if (optionalDevUser.isEmpty())
             return "Utente non registrato, reinizializza il bot con /start";
         final DevUser devUser = optionalDevUser.get();
@@ -158,7 +158,7 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
 
     @MessageRequest("{message}")
     public String genericMessageHandler(Chat chat, @BotPathVariable("message") String message) {
-        Optional<DevUser> optionalDevUser = devUserRepository.findByChadId(chat.id());
+        Optional<DevUser> optionalDevUser = devUserRepository.findByChatId(chat.id());
         if (optionalDevUser.isEmpty())
             return "Utente non registrato, reinizializza il bot con /start";
         final DevUser devUser = optionalDevUser.get();
@@ -166,7 +166,7 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
             devUser.setDevUser(true);
             devUserRepository.save(devUser);
             return "Autenticazione avvenuta con successo.\n" +
-                    "Benvenuto sviluppatore";
+                    "Benvenuto sviluppatore!";
         } else {
             return "Comando non riconosciuto";
         }

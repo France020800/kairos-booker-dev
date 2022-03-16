@@ -8,6 +8,6 @@ import java.util.Optional;
 
 @Repository
 public interface DevUserRepository extends JpaRepository<DevUser, Integer> {
-    public Optional<DevUser> findByChadId(Long chatId);
+    public Optional<DevUser> findByChatId(Long chatId);
     public List<DevUser> findAll();
 }

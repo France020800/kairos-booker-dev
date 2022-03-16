@@ -22,7 +22,7 @@ public class DevUser {
             generator="lesson_seq")
     private Integer id;
 
-    @Column(name = "chat_id")
+    @Column(name = "chat_id", unique = true)
     private Long chatId;
 
     @Column(name = "username")
