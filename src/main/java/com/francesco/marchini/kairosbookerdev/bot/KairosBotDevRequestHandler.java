@@ -1,5 +1,7 @@
 package com.francesco.marchini.kairosbookerdev.bot;
 
+import com.francesco.marchini.kairosbookerdev.db.devUser.DevUser;
+import com.francesco.marchini.kairosbookerdev.db.devUser.DevUserRepository;
 import com.francesco.marchini.kairosbookerdev.db.lessonToBook.LessonToBookRepository;
 import com.francesco.marchini.kairosbookerdev.db.user.KairosUser;
 import com.francesco.marchini.kairosbookerdev.db.user.UserRepository;
@@ -14,8 +16,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,7 +25,9 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
 
     private final UserRepository userRepository;
     private final LessonToBookRepository lessonToBookRepository;
+    private final DevUserRepository devUserRepository;
     private final TelegramBot bot;
+    private final String PASSWORD;
 
     @Value("${bot.token}")
     private String token;
@@ -37,9 +39,11 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
      * @param lessonToBookRepository Repository to store lessons which will be auto-booked
      */
     @Autowired
-    public KairosBotDevRequestHandler(UserRepository userRepository, LessonToBookRepository lessonToBookRepository, @Value("${bot.token.official}") String officialToken) {
+    public KairosBotDevRequestHandler(UserRepository userRepository, LessonToBookRepository lessonToBookRepository, DevUserRepository devUserRepository, @Value("${bot.token.official}") String officialToken, @Value("${bot.password}") String PASSWORD) {
         this.userRepository = userRepository;
         this.lessonToBookRepository = lessonToBookRepository;
+        this.devUserRepository = devUserRepository;
+        this.PASSWORD = PASSWORD;
         this.bot = new TelegramBot(officialToken);
     }
 
@@ -56,16 +60,33 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
     @MessageRequest("/start")
     public String welcomeUser(Chat chat) {
         log.info(chat.id() + " user logged.");
-        return "Pagina di gestione e configurazione di kairos-booker";
+        final Optional<DevUser> optionalDevUser = devUserRepository.findByChadId(chat.id());
+        if (optionalDevUser.isPresent())
+            return "Bentornato su sviluppatore!";
+        final DevUser devUser = devUserRepository.findByChadId(chat.id())
+                .orElse(DevUser.builder()
+                        .chatId(chat.id())
+                        .username(chat.username())
+                        .isDevUser(false)
+                        .build());
+        devUserRepository.save(devUser);
+        return loginMessage();
     }
 
     /**
      * Method that display the connected user
      *
+     * @param chat The representation of the chat with the user
      */
     @MessageRequest("/user")
-    public String getUser() {
+    public String getUser(Chat chat) {
         log.info("/user command");
+        Optional<DevUser> optionalDevUser = devUserRepository.findByChadId(chat.id());
+        if (optionalDevUser.isEmpty())
+            return "Utente non registrato reinizializza il bot con /start";
+        final DevUser devUser = optionalDevUser.get();
+        if (!devUser.isDevUser())
+            return loginMessage();
         List<KairosUser> kairosUsers = userRepository.findAll();
         String out = "";
         for (KairosUser user : kairosUsers) {
@@ -80,10 +101,17 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
      * Method that delete a KairosUser from repository
      *
      * @param chatId The user's chat id we want to remove
+     * @param chat The representation of the chat with the user
      */
     @MessageRequest("/delete_user {chatId}")
-    public String removeUser(@BotPathVariable("chatId") Long chatId) {
+    public String removeUser(Chat chat, @BotPathVariable("chatId") Long chatId) {
         log.info("/delete_user command");
+        Optional<DevUser> optionalDevUser = devUserRepository.findByChadId(chat.id());
+        if (optionalDevUser.isEmpty())
+            return "Utente non registrato, reinizializza il bot con /start";
+        final DevUser devUser = optionalDevUser.get();
+        if (!devUser.isDevUser())
+            return loginMessage();
         final Optional<KairosUser> optionalKairosUser = userRepository.findByChadId(chatId);
         if (optionalKairosUser.isEmpty())
             return "Nessun utente da rimuovere trovato.";
@@ -97,8 +125,14 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
      * @param message The message that we want to send.
      */
     @MessageRequest("/send_to_all {message}")
-    public String sendToAll(@BotPathVariable("message") String message) {
+    public String sendToAll(Chat chat, @BotPathVariable("message") String message) {
         log.info("/send_to_all command");
+        Optional<DevUser> optionalDevUser = devUserRepository.findByChadId(chat.id());
+        if (optionalDevUser.isEmpty())
+            return "Utente non registrato, reinizializza il bot con /start";
+        final DevUser devUser = optionalDevUser.get();
+        if (!devUser.isDevUser())
+            return loginMessage();
         userRepository.findAll().forEach(u -> bot.execute(new SendMessage(u.getChadId(), message)));
         return "Messaggi inviati con successo";
     }
@@ -110,10 +144,36 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
      * @param message The message we want to send
      */
     @MessageRequest("/send_to {chatId} {message}")
-    public String sendTo(@BotPathVariable("chatId") Long chatId, @BotPathVariable("message") String message) {
+    public String sendTo(Chat chat, @BotPathVariable("chatId") Long chatId, @BotPathVariable("message") String message) {
         log.info("/send_to command");
+        Optional<DevUser> optionalDevUser = devUserRepository.findByChadId(chat.id());
+        if (optionalDevUser.isEmpty())
+            return "Utente non registrato, reinizializza il bot con /start";
+        final DevUser devUser = optionalDevUser.get();
+        if (!devUser.isDevUser())
+            return loginMessage();
         bot.execute(new SendMessage(chatId, message));
         return "Messaggio inviato con successo";
     }
 
+    @MessageRequest("{message}")
+    public String genericMessageHandler(Chat chat, @BotPathVariable("message") String message) {
+        Optional<DevUser> optionalDevUser = devUserRepository.findByChadId(chat.id());
+        if (optionalDevUser.isEmpty())
+            return "Utente non registrato, reinizializza il bot con /start";
+        final DevUser devUser = optionalDevUser.get();
+        if (message.equals(PASSWORD) && !devUser.isDevUser()) {
+            devUser.setDevUser(true);
+            devUserRepository.save(devUser);
+            return "Autenticazione avvenuta con successo.\n" +
+                    "Benvenuto sviluppatore";
+        } else {
+            return "Comando non riconosciuto";
+        }
+    }
+
+    private String loginMessage() {
+        return "Autenticazione richiesta per utilizzare questo bot.\n" +
+                "Prego inserire la password.";
+    }
 }
