@@ -16,8 +16,8 @@ jobs:
         name: Login to Docker Hub
         uses: docker/login-action@v1
         with:
-          username: france020800
-          password: 7a8a5fe6-9a93-483b-baf7-4021f04a1750
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secretes.DOCKERHUB_TOKEN }}
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
