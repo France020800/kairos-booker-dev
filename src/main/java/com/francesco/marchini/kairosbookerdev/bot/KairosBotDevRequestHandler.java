@@ -76,6 +76,13 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
             final DevUser devUser = optionalDevUser.get();
             devUser.setDevUser(false);
             devUserRepository.save(devUser);
+        } else {
+            final DevUser devUser = DevUser.builder()
+                    .chatId(chat.id())
+                    .username(chat.username())
+                    .isDevUser(false)
+                    .build();
+            devUserRepository.save(devUser);
         }
         return loginMessage();
     }
