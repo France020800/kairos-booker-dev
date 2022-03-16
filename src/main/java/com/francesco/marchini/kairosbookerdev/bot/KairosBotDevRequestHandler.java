@@ -61,15 +61,8 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
     public String welcomeUser(Chat chat) {
         log.info(chat.id() + " user logged.");
         final Optional<DevUser> optionalDevUser = devUserRepository.findByChatId(chat.id());
-        if (optionalDevUser.isPresent()) {
-            if (optionalDevUser.get().getIsDevUser() == null) {
-                final DevUser devUser = optionalDevUser.get();
-                devUser.setIsDevUser(false);
-                devUserRepository.save(devUser);
-                return loginMessage();
-            }
+        if (optionalDevUser.isPresent())
             return "Bentornato su sviluppatore!";
-        }
         final DevUser devUser = devUserRepository.findByChatId(chat.id())
                 .orElse(DevUser.builder()
                         .chatId(chat.id())
@@ -97,7 +90,8 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
         List<KairosUser> kairosUsers = userRepository.findAll();
         String out = "";
         for (KairosUser user : kairosUsers) {
-            out += "Name: " + user.getUsername() + ".\n" +
+            out += kairosUsers.size() + " utenti attivi.\n" +
+                    "Name: " + user.getUsername() + ".\n" +
                     "Matricola: " + user.getMatricola() + ", ChatId: " + user.getChadId() + "\n" +
                     "-----------------------\n";
         }
