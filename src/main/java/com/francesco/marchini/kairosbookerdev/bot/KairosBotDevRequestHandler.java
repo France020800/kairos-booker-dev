@@ -69,7 +69,9 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
         List<KairosUser> kairosUsers = userRepository.findAll();
         String out = "";
         for (KairosUser user : kairosUsers) {
-            out += "Name: " + user.getUsername() + ", Matricola: " + user.getMatricola() + ", ChatId: " + user.getId() + "\n";
+            out += "Name: " + user.getUsername() + ".\n" +
+                    "Matricola: " + user.getMatricola() + ", ChatId: " + user.getChadId() + "\n" +
+                    "-----------------------\n";
         }
         return out;
     }
