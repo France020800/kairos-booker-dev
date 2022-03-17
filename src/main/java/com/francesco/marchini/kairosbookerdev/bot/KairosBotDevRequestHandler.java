@@ -165,12 +165,10 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
      */
     @MessageRequest("/ab_courses_of {chatID}")
     public String getUserCourses(Chat chat) {
-        String out = "Corsi in auto prenotazione di " + chat.id() + "\n\n";
+        StringBuilder out = new StringBuilder("Corsi in auto prenotazione di " + chat.id() + "\n\n");
         final List<LessonToBook> lessonsToBook = lessonToBookRepository.findByChatId(chat.id());
-        for (LessonToBook lessonToBook : lessonsToBook)
-            out += lessonToBook.getCourseName() + "\n" +
-                    "----------------------------\n";
-        return out;
+        for (LessonToBook lessonToBook : lessonsToBook) out.append(lessonToBook.getCourseName()).append("\n").append("----------------------------\n");
+        return out.toString();
     }
 
     /**
@@ -180,11 +178,10 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
      */
     @MessageRequest("/who_autobooking")
     public String getAutoBookingUser(Chat chat) {
-        final List<KairosUser> kairosUsers = userRepository.findAll().stream().filter(KairosUser::isAutoBooking).collect(Collectors.toList());
-        String out = "Utenti in auto-booking: " + kairosUsers.size() +"\n\n";
-        for (KairosUser kairosUser : kairosUsers)
-            out += "Utente: " + kairosUser.getChadId();
-        return out;
+        final List<KairosUser> kairosUsers = userRepository.findAll().stream().filter(KairosUser::isAutoBooking).toList();
+        StringBuilder out = new StringBuilder("Utenti in auto-booking: " + kairosUsers.size() + "\n\n");
+        for (KairosUser kairosUser : kairosUsers) out.append("Utente: ").append(kairosUser.getChadId());
+        return out.toString();
     }
 
     @MessageRequest("{message}")
