@@ -2,6 +2,7 @@ package com.francesco.marchini.kairosbookerdev.bot;
 
 import com.francesco.marchini.kairosbookerdev.db.devUser.DevUser;
 import com.francesco.marchini.kairosbookerdev.db.devUser.DevUserRepository;
+import com.francesco.marchini.kairosbookerdev.db.lessonToBook.LessonToBook;
 import com.francesco.marchini.kairosbookerdev.db.lessonToBook.LessonToBookRepository;
 import com.francesco.marchini.kairosbookerdev.db.user.KairosUser;
 import com.francesco.marchini.kairosbookerdev.db.user.UserRepository;
@@ -18,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @BotController
 @Slf4j
@@ -92,7 +94,7 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
         for (KairosUser user : kairosUsers) {
             out += "Name: " + user.getUsername() + ".\n" +
                     "Matricola: " + user.getMatricola() + ", ChatId: " + user.getChadId() + "\n" +
-                    "-----------------------\n";
+                    "----------------------------\n";
         }
         return out;
     }
@@ -154,6 +156,21 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
             return loginMessage();
         bot.execute(new SendMessage(chatId, message));
         return "Messaggio inviato con successo";
+    }
+
+    /**
+     * Method that return the user's auto-booking courses
+     *
+     * @param chat The representation of the chat with the user
+     */
+    @MessageRequest("/AB_courses_of {chatID}")
+    public String getUserCourses(Chat chat) {
+        String out = "Corsi in auto prenotazione di " + chat.id() + "\n\n";
+        final List<LessonToBook> lessonsToBook = lessonToBookRepository.findByChatId(chat.id());
+        for (LessonToBook lessonToBook : lessonsToBook)
+            out += lessonToBook.getCourseName() + "\n" +
+                    "----------------------------\n";
+        return out;
     }
 
     @MessageRequest("{message}")
