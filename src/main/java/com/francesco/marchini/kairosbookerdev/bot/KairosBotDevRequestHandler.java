@@ -173,6 +173,20 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
         return out;
     }
 
+    /**
+     * Method that return the users who auto-booking
+     *
+     * @param chat The representation of the chat with the user
+     */
+    @MessageRequest("/who_autobooking")
+    public String getAutoBookingUser(Chat chat) {
+        final List<KairosUser> kairosUsers = userRepository.findAll().stream().filter(KairosUser::isAutoBooking).collect(Collectors.toList());
+        String out = "Utenti in auto-booking: " + kairosUsers.size() +"\n\n";
+        for (KairosUser kairosUser : kairosUsers)
+            out += "Utente: " + kairosUser.getChadId();
+        return out;
+    }
+
     @MessageRequest("{message}")
     public String genericMessageHandler(Chat chat, @BotPathVariable("message") String message) {
         Optional<DevUser> optionalDevUser = devUserRepository.findByChatId(chat.id());
