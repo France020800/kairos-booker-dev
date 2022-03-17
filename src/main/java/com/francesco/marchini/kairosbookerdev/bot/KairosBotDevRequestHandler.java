@@ -163,7 +163,7 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
      *
      * @param chat The representation of the chat with the user
      */
-    @MessageRequest("/AB_courses_of {chatID}")
+    @MessageRequest("/ab_courses_of {chatID}")
     public String getUserCourses(Chat chat) {
         String out = "Corsi in auto prenotazione di " + chat.id() + "\n\n";
         final List<LessonToBook> lessonsToBook = lessonToBookRepository.findByChatId(chat.id());
