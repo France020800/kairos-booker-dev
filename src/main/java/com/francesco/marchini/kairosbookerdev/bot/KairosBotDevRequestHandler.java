@@ -179,8 +179,7 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
     public String getAutoBookingUser() {
         final List<KairosUser> kairosUsers = userRepository.findAll().stream().filter(KairosUser::isAutoBooking).toList();
         StringBuilder out = new StringBuilder("Utenti in auto-booking: " + kairosUsers.size() + "\n\n");
-        for (KairosUser kairosUser : kairosUsers) out.
-                append("Utente: ").append(kairosUser.getChadId())
+        for (KairosUser kairosUser : kairosUsers) out.append("Utente: ").append(kairosUser.getChadId())
                 .append("\n----------------------------\n");
         return out.toString();
     }
