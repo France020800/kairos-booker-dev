@@ -3,6 +3,6 @@ WORKDIR /app
 ADD . .
 RUN mvn package -Dmaven.test.skip=true
 
-FROM openjdk:17.0-jdk-slim
+FROM arm64v8/openjdk:11-oracle
 COPY --from=maven_builder /app/target/*.jar app.jar
 ENTRYPOINT ["java","-jar","/app.jar"]
