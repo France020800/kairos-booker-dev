@@ -90,13 +90,11 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
         if (!devUser.getIsDevUser())
             return loginMessage();
         List<KairosUser> kairosUsers = userRepository.findAll();
-        String out = kairosUsers.size() + " UTENTI ATTIVI.\n\n";
+        StringBuilder out = new StringBuilder(kairosUsers.size() + " UTENTI ATTIVI.\n\n");
         for (KairosUser user : kairosUsers) {
-            out += "Name: " + user.getUsername() + ".\n" +
-                    "Matricola: " + user.getMatricola() + ", ChatId: " + user.getChadId() + "\n" +
-                    "----------------------------\n";
+            out.append("Name: ").append(user.getUsername()).append(".\n").append("Matricola: ").append(user.getMatricola()).append(", ChatId: ").append(user.getChadId()).append("\n").append("----------------------------\n");
         }
-        return out;
+        return out.toString();
     }
 
     /**
@@ -163,8 +161,9 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
      *
      * @param chatId The representation of the chat with the user
      */
-    @MessageRequest("/ab_courses_of {chatID}")
+    @MessageRequest("/ab_courses_of {chatId}")
     public String getUserCourses(Chat chat, @BotPathVariable("chatId") Long chatId) {
+        log.info("/ab_courses_of " + chatId);
         Optional<DevUser> optionalDevUser = devUserRepository.findByChatId(chat.id());
         if (optionalDevUser.isEmpty())
             return "Utente non registrato, reinizializza il bot con /start";
@@ -173,7 +172,9 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
             return loginMessage();
         StringBuilder out = new StringBuilder("Corsi in auto prenotazione di " + chatId + "\n\n");
         final List<LessonToBook> lessonsToBook = lessonToBookRepository.findByChatId(chatId);
-        for (LessonToBook lessonToBook : lessonsToBook) out.append(lessonToBook.getCourseName()).append("\n").append("----------------------------\n");
+        for (LessonToBook lessonToBook : lessonsToBook) out.append(lessonToBook.getCourseName())
+                .append("\n")
+                .append("----------------------------\n");
         return out.toString();
     }
 
@@ -184,6 +185,7 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
      */
     @MessageRequest("/who_autobooking")
     public String getAutoBookingUser(Chat chat) {
+        log.info("who_autobooking");
         Optional<DevUser> optionalDevUser = devUserRepository.findByChatId(chat.id());
         if (optionalDevUser.isEmpty())
             return "Utente non registrato, reinizializza il bot con /start";
@@ -199,6 +201,7 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
 
     @MessageRequest("{message}")
     public String genericMessageHandler(Chat chat, @BotPathVariable("message") String message) {
+        log.info("Default handler");
         Optional<DevUser> optionalDevUser = devUserRepository.findByChatId(chat.id());
         if (optionalDevUser.isEmpty())
             return "Utente non registrato, reinizializza il bot con /start";
