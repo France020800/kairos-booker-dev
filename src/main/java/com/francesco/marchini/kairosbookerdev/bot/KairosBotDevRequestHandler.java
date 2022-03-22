@@ -164,7 +164,13 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
      * @param chatId The representation of the chat with the user
      */
     @MessageRequest("/ab_courses_of {chatID}")
-    public String getUserCourses(@BotPathVariable("chatId") Long chatId) {
+    public String getUserCourses(Chat chat, @BotPathVariable("chatId") Long chatId) {
+        Optional<DevUser> optionalDevUser = devUserRepository.findByChatId(chat.id());
+        if (optionalDevUser.isEmpty())
+            return "Utente non registrato, reinizializza il bot con /start";
+        final DevUser devUser = optionalDevUser.get();
+        if (!devUser.getIsDevUser())
+            return loginMessage();
         StringBuilder out = new StringBuilder("Corsi in auto prenotazione di " + chatId + "\n\n");
         final List<LessonToBook> lessonsToBook = lessonToBookRepository.findByChatId(chatId);
         for (LessonToBook lessonToBook : lessonsToBook) out.append(lessonToBook.getCourseName()).append("\n").append("----------------------------\n");
@@ -174,9 +180,16 @@ public class KairosBotDevRequestHandler implements TelegramMvcController {
     /**
      * Method that return the users who auto-booking
      *
+     * @param chat The representation of the chat with  the user
      */
     @MessageRequest("/who_autobooking")
-    public String getAutoBookingUser() {
+    public String getAutoBookingUser(Chat chat) {
+        Optional<DevUser> optionalDevUser = devUserRepository.findByChatId(chat.id());
+        if (optionalDevUser.isEmpty())
+            return "Utente non registrato, reinizializza il bot con /start";
+        final DevUser devUser = optionalDevUser.get();
+        if (!devUser.getIsDevUser())
+            return loginMessage();
         final List<KairosUser> kairosUsers = userRepository.findAll().stream().filter(KairosUser::isAutoBooking).toList();
         StringBuilder out = new StringBuilder("Utenti in auto-booking: " + kairosUsers.size() + "\n\n");
         for (KairosUser kairosUser : kairosUsers) out.append("Utente: ").append(kairosUser.getChadId())
